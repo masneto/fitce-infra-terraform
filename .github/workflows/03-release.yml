@@ -19,7 +19,7 @@ jobs:
           VERSION=$(echo "${{ github.event.pull_request.title }}" | grep -oP 'release/v\K[0-9]+\.[0-9]+\.[0-9]+')
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-  build-deploy:
+  infra-terraform:
     needs: get-version
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,7 @@ jobs:
 
   create-tag-release:
     runs-on: ubuntu-latest
-    needs: [ build-deploy, get-version ]
+    needs: [ infra-terraform, get-version ]
     steps:
       - name: Create tag
         if: steps.get_version.outputs.version != ''

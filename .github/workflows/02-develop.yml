@@ -62,7 +62,7 @@ jobs:
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
     
 
-  build-deploy:
+  infra-terraform:
     needs: create-version
     runs-on: ubuntu-latest
     steps:
