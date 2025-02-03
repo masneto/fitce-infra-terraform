@@ -1,0 +1,24 @@
+name: Create Pull Request to Develop
+
+on:
+  push:
+    branches:
+      - 'feature/*'
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        base: develop
+        branch: ${{ github.ref }}
+        title: 'Branch criada automaticamente -> develop'
+        body: 'This PR was automatically created by GitHub Actions.'
+        draft: false
