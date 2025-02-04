@@ -93,5 +93,6 @@ jobs:
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         run: |
+          terraform plan
           terraform destroy -auto-approve
 #          terraform apply -auto-approve tfplan
