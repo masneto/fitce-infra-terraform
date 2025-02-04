@@ -14,14 +14,14 @@ body:
   - type: input
     id: resource_name
     attributes:
-      label: ">> Resource Name <<"
+      label: ">>resource_name<<"
       description: Name of the resource to be destroyed.
       placeholder: e.g., my-resource
 
   - type: dropdown
     id: resource_type
     attributes:
-      label: ">> Resource Type <<"
+      label: ">>resource_type<<"
       description: Select the type of resource to be destroyed.
       options:
         - S3 Bucket
@@ -31,6 +31,6 @@ body:
   - type: textarea
     id: reason
     attributes:
-      label: Reason for Destruction
+      label: ">>reason<<"
       description: Provide a reason for why this resource should be destroyed.
       placeholder: e.g., No longer needed, cost-saving, etc.
