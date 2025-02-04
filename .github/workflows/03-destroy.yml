@@ -30,13 +30,19 @@ jobs:
         working-directory: infra
         run: terraform init
 
+      - name: Parse Issue Body
+        id: parse_issue
+        run: |
+          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Name' | tail -n 1 | xargs)
+          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Type' | tail -n 1 | xargs)
+          echo "RESOURCE_NAME=$RESOURCE_NAME" >> $GITHUB_ENV
+          echo "RESOURCE_TYPE=$RESOURCE_TYPE" >> $GITHUB_ENV
+
       - name: Terraform Plan for Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_type')
-          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_name')
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
@@ -58,8 +64,6 @@ jobs:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_type')
-          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_name')
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform destroy -target=aws_s3_bucket.$RESOURCE_NAME -auto-approve
