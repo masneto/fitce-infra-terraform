@@ -1,4 +1,4 @@
-name: 01 - Create Pull Request to Develop
+name: 02 - Create Pull Request to Main
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
       uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        base: develop
+        base: main
         branch: ${{ github.ref }}
-        title: 'Branch criada automaticamente -> develop'
+        title: 'Branch criada automaticamente -> main'
         body: 'This PR was automatically created by GitHub Actions.'
         draft: false
