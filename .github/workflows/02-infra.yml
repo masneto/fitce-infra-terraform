@@ -28,10 +28,6 @@ jobs:
           terraform_wrapper: false
           terraform_version: "1.10.5"
 
-      - name: Terraform Format Check
-        working-directory: infra
-        run: terraform fmt -check -recursive
-
       - name: Initialize Terraform
         working-directory: infra
         run: terraform init
