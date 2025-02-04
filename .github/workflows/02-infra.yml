@@ -25,6 +25,26 @@ jobs:
       - name: Zip Terraform files
         run: zip -r terraform.zip ./infra
 
+      - name: Upload Terraform files to EC2
+        id: upload_terraform
+        run: |
+          command_id=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --comment "Copy Terraform files to EC2 instance" \
+            --query "Command.CommandId" \
+            --output text)
+          echo "command_id=$command_id" >> $GITHUB_ENV
+
+      - name: Get Upload Logs
+        run: |
+          aws ssm get-command-invocation \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "StandardOutputContent" \
+            --output text
+
       - name: Execute Terraform Init on EC2
         id: terraform_init
         run: |
