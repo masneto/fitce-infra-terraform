@@ -6,7 +6,7 @@ on:
 
 jobs:
   destroy:
-    if: github.event.issue.labels.*.name contains 'destroy'
+    if: contains(github.event.issue.labels.*.name, 'destroy')
     runs-on: ubuntu-latest
 
     steps:
