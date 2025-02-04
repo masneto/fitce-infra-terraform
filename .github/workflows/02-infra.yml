@@ -21,16 +21,16 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform
+        working-directory: ./infra
 
       - name: Terraform Plan
         run: terraform plan
-        working-directory: ./terraform
+        working-directory: ./infra
 
       - name: Terraform Apply
         id: apply
         run: terraform apply -auto-approve
-        working-directory: ./terraform
+        working-directory: ./infra
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -40,4 +40,4 @@ jobs:
         run: |
           echo "Verifying Terraform Apply..."
           terraform show
-        working-directory: ./terraform
+        working-directory: ./infra
