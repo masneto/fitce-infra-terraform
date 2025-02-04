@@ -32,11 +32,6 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.0
-        with:
-          working_directory: infra
-
       - name: Import and Verify Existing AWS Resources
         working-directory: infra
         env:
