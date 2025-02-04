@@ -23,20 +23,20 @@ variable "automation_role_name" {
   default     = "AutomationRole"
 }
 
-variable "dev_instance_id" {
-  description = "ID da instância EC2 existente para o ambiente de desenvolvimento"
-  type        = string
-  default     = "i-0d68192179734aa89"
-}
+# variable "dev_instance_id" {
+#   description = "ID da instância EC2 existente para o ambiente de desenvolvimento"
+#   type        = string
+#   default     = "i-0d68192179734aa89"
+# }
 
-variable "hom_instance_id" {
-  description = "ID da instância EC2 existente para o ambiente de homologação"
-  type        = string
-  default     = "i-0d68192179734aa89"
-}
+# variable "hom_instance_id" {
+#   description = "ID da instância EC2 existente para o ambiente de homologação"
+#   type        = string
+#   default     = "i-0d68192179734aa89"
+# }
 
-variable "prod_instance_id" {
-  description = "ID da instância EC2 existente para o ambiente de produção"
-  type        = string
-  default     = "i-0d68192179734aa89"
-}
+# variable "prod_instance_id" {
+#   description = "ID da instância EC2 existente para o ambiente de produção"
+#   type        = string
+#   default     = "i-0d68192179734aa89"
+# }
