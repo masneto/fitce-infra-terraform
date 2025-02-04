@@ -1,0 +1,77 @@
+name: 04 - Destroy Resources
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  destroy:
+    if: github.event.issue.labels.*.name contains 'destroy'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+          terraform_version: "1.10.5"
+
+      - name: Initialize Terraform
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Plan for Destroy
+        env:
+          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+        working-directory: infra
+        run: |
+          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
+          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
+          case $RESOURCE_TYPE in
+            "S3 Bucket")
+              terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
+              ;;
+            "IAM Role")
+              terraform plan -destroy -target=aws_iam_role.$RESOURCE_NAME
+              ;;
+            "IAM Policy")
+              terraform plan -destroy -target=aws_iam_policy.$RESOURCE_NAME
+              ;;
+            *)
+              echo "Tipo de recurso desconhecido: $RESOURCE_TYPE"
+              exit 1
+              ;;
+          esac
+
+      - name: Terraform Destroy
+        env:
+          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+        working-directory: infra
+        run: |
+          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
+          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
+          case $RESOURCE_TYPE in
+            "S3 Bucket")
+              terraform destroy -target=aws_s3_bucket.$RESOURCE_NAME -auto-approve
+              ;;
+            "IAM Role")
+              terraform destroy -target=aws_iam_role.$RESOURCE_NAME -auto-approve
+              ;;
+            "IAM Policy")
+              terraform destroy -target=aws_iam_policy.$RESOURCE_NAME -auto-approve
+              ;;
+            *)
+              echo "Tipo de recurso desconhecido: $RESOURCE_TYPE"
+              exit 1
+              ;;
+          esac
