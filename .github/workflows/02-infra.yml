@@ -51,19 +51,29 @@ jobs:
             --parameters 'commands=["unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
             --comment "Unzip Terraform files on EC2 instance" \
             --query "Command.CommandId" \
-            --output text          
+            --output text
 
-      - name: Upload Terraform files to EC2
-        id: upload_terraform
+      - name: Adjust permissions on EC2
         run: |
-          command_id=$(aws ssm send-command \
+          aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
-            --comment "Copy Terraform files to EC2 instance" \
+            --parameters 'commands=["sudo chown -R ubuntu:ubuntu /home/ubuntu/terraform"]' \
+            --comment "Adjust permissions on EC2 instance" \
             --query "Command.CommandId" \
-            --output text)
-          echo "command_id=$command_id" >> $GITHUB_ENV
+            --output text
+
+      # - name: Upload Terraform files to EC2
+      #   id: upload_terraform
+      #   run: |
+      #     command_id=$(aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+      #       --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+      #       --comment "Copy Terraform files to EC2 instance" \
+      #       --query "Command.CommandId" \
+      #       --output text)
+      #     echo "command_id=$command_id" >> $GITHUB_ENV
 
       - name: Get Upload Logs
         run: |
