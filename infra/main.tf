@@ -23,7 +23,7 @@ resource "aws_iam_role" "developer_role" {
     Version = "2012-10-17"
     Statement = [{
       Effect = "Allow"
-      Principal = { AWS = "*" }
+      Principal = { Service = "ec2.amazonaws.com" }
       Action = "sts:AssumeRole"
     }]
   })
@@ -37,7 +37,7 @@ resource "aws_iam_role" "devops_role" {
     Version = "2012-10-17"
     Statement = [{
       Effect = "Allow"
-      Principal = { AWS = "*" }
+      Principal = { Service = "ec2.amazonaws.com" }
       Action = "sts:AssumeRole"
     }]
   })
@@ -51,7 +51,7 @@ resource "aws_iam_role" "automation_role" {
     Version = "2012-10-17"
     Statement = [{
       Effect = "Allow"
-      Principal = { AWS = "*" }
+      Principal = { Service = "ec2.amazonaws.com" }
       Action = "sts:AssumeRole"
     }]
   })
@@ -132,68 +132,56 @@ resource "aws_iam_policy" "automation_policy" {
   })
 }
 
-# Anexar Política de Automação à Role
-resource "aws_iam_role_policy_attachment" "automation_policy_attachment" {
-  role       = aws_iam_role.automation_role.name
-  policy_arn = aws_iam_policy.automation_policy.arn
-}
+# # Anexar Política de Automação à Role
+# resource "aws_iam_role_policy_attachment" "automation_policy_attachment" {
+#   role       = aws_iam_role.automation_role.name
+#   policy_arn = aws_iam_policy.automation_policy.arn
+# }
 
-# Criar Perfil de Instância para Desenvolvedores
-resource "aws_iam_instance_profile" "developer_instance_profile" {
-  name = "developer_instance_profile"
-  role = aws_iam_role.developer_role.name
-}
+# # Criar Perfil de Instância para Desenvolvedores
+# resource "aws_iam_instance_profile" "developer_instance_profile" {
+#   name = "developer_instance_profile"
+#   role = aws_iam_role.developer_role.name
+# }
 
-# Criar Perfil de Instância para DevOps
-resource "aws_iam_instance_profile" "devops_instance_profile" {
-  name = "devops_instance_profile"
-  role = aws_iam_role.devops_role.name
-}
+# # Criar Perfil de Instância para DevOps
+# resource "aws_iam_instance_profile" "devops_instance_profile" {
+#   name = "devops_instance_profile"
+#   role = aws_iam_role.devops_role.name
+# }
 
-# Criar Perfil de Instância para Automação
-resource "aws_iam_instance_profile" "automation_instance_profile" {
-  name = "automation_instance_profile"
-  role = aws_iam_role.automation_role.name
-}
+# # Criar Perfil de Instância para Automação
+# resource "aws_iam_instance_profile" "automation_instance_profile" {
+#   name = "automation_instance_profile"
+#   role = aws_iam_role.automation_role.name
+# }
 
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
-resource "aws_iam_instance_profile_attachment" "dev_developer_instance_profile_attachment" {
-  instance_id         = var.dev_instance_id
-  iam_instance_profile = aws_iam_instance_profile.developer_instance_profile.name
-}
+# # Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
+# resource "aws_iam_instance_profile_attachment" "dev_developer_instance_profile_attachment" {
+#   instance_id         = var.dev_instance_id
+#   iam_instance_profile = aws_iam_instance_profile.developer_instance_profile.name
+# }
 
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
-resource "aws_iam_instance_profile_attachment" "dev_devops_instance_profile_attachment" {
-  instance_id         = var.dev_instance_id
-  iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
-}
+# # Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
+# resource "aws_iam_instance_profile_attachment" "dev_devops_instance_profile_attachment" {
+#   instance_id         = var.dev_instance_id
+#   iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
+# }
 
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
-resource "aws_iam_instance_profile_attachment" "dev_automation_instance_profile_attachment" {
-  instance_id         = var.dev_instance_id
-  iam_instance_profile = aws_iam_instance_profile.automation_instance_profile.name
-}
+# # Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de desenvolvimento
+# resource "aws_iam_instance_profile_attachment" "dev_automation_instance_profile_attachment" {
+#   instance_id         = var.dev_instance_id
+#   iam_instance_profile = aws_iam_instance_profile.automation_instance_profile.name
+# }
 
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de homologação
-resource "aws_iam_instance_profile_attachment" "hom_devops_instance_profile_attachment" {
-  instance_id         = var.hom_instance_id
-  iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
-}
+# # Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de homologação
+# resource "aws_iam_instance_profile_attachment" "hom_devops_instance_profile_attachment" {
+#   instance_id         = var.hom_instance_id
+#   iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
+# }
 
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de homologação
-resource "aws_iam_instance_profile_attachment" "hom_automation_instance_profile_attachment" {
-  instance_id         = var.hom_instance_id
-  iam_instance_profile = aws_iam_instance_profile.automation_instance_profile.name
-}
-
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de produção
-resource "aws_iam_instance_profile_attachment" "prod_devops_instance_profile_attachment" {
-  instance_id         = var.prod_instance_id
-  iam_instance_profile = aws_iam_instance_profile.devops_instance_profile.name
-}
-
-# Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de produção
-resource "aws_iam_instance_profile_attachment" "prod_automation_instance_profile_attachment" {
-  instance_id         = var.prod_instance_id
-  iam_instance_profile = aws_iam_instance_profile.automation_instance_profile.name
-}
+# # Associar Perfil de Instância a uma Instância EC2 existente para o ambiente de homologação
+# resource "aws_iam_instance_profile_attachment" "hom_automation_instance_profile_attachment" {
+#   instance_id         = var.hom_instance_id
+#   iam_instance_profile = aws_iam_instance_profile.automation_instance_profile.name
+# }
