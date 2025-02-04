@@ -1,4 +1,4 @@
-name: 02 - Create Pull Request to Main
+name: 01 - Create Pull Request to Main
 
 on:
   push:
