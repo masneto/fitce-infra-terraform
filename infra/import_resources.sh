@@ -17,7 +17,17 @@ for role in DeveloperRole DevOpsRole AutomationRole; do
   ROLE_EXISTS=$(aws iam get-role --role-name $role --query 'Role.RoleName' --output text 2>/dev/null || echo "")
   if [[ "$ROLE_EXISTS" == "$role" ]]; then
     echo "✅ Role '$role' encontrada"
-    terraform import aws_iam_role.${role,,}_role $role || true
+    case $role in
+      DeveloperRole)
+        terraform import aws_iam_role.developer_role $role || true
+        ;;
+      DevOpsRole)
+        terraform import aws_iam_role.devops_role $role || true
+        ;;
+      AutomationRole)
+        terraform import aws_iam_role.automation_role $role || true
+        ;;
+    esac
   else
     echo "ℹ️ Role '$role' não encontrada"
   fi
@@ -28,7 +38,17 @@ for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
   POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$policy'].Arn" --output text 2>/dev/null || echo "")
   if [[ -n "$POLICY_ARN" ]]; then
     echo "✅ Policy '$policy' encontrada"
-    terraform import aws_iam_policy.${policy,,}_policy $POLICY_ARN || true
+    case $policy in
+      DeveloperS3Access)
+        terraform import aws_iam_policy.developer_policy $POLICY_ARN || true
+        ;;
+      DevOpsS3Access)
+        terraform import aws_iam_policy.devops_policy $POLICY_ARN || true
+        ;;
+      AutomationS3Access)
+        terraform import aws_iam_policy.automation_policy $POLICY_ARN || true
+        ;;
+    esac
   else
     echo "ℹ️ Policy '$policy' não encontrada"
   fi
@@ -40,7 +60,17 @@ for role in DeveloperRole DevOpsRole AutomationRole; do
     ATTACHED_ARN=$(aws iam list-attached-role-policies --role-name $role --query "AttachedPolicies[?PolicyName=='$policy'].PolicyArn" --output text 2>/dev/null || echo "")
     if [[ -n "$ATTACHED_ARN" ]]; then
       echo "✅ Policy '$policy' anexada à role '$role'"
-      terraform import aws_iam_role_policy_attachment.${role,,}_policy_attachment "$role/$ATTACHED_ARN" || true
+      case $role in
+        DeveloperRole)
+          terraform import aws_iam_role_policy_attachment.developer_policy_attachment "$role/$ATTACHED_ARN" || true
+          ;;
+        DevOpsRole)
+          terraform import aws_iam_role_policy_attachment.devops_policy_attachment "$role/$ATTACHED_ARN" || true
+          ;;
+        AutomationRole)
+          terraform import aws_iam_role_policy_attachment.automation_policy_attachment "$role/$ATTACHED_ARN" || true
+          ;;
+      esac
     else
       echo "ℹ️ Policy '$policy' não está anexada à role '$role'"
     fi
