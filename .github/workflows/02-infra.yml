@@ -43,27 +43,7 @@ jobs:
             --output text)
           echo "command_id=$command_id" >> $GITHUB_ENV
 
-      # - name: Unzip Terraform files on EC2
-      #   run: |
-      #     aws ssm send-command \
-      #       --document-name "AWS-RunShellScript" \
-      #       --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-      #       --parameters 'commands=["unzip -o /home/ec2-user/terraform.zip -d /home/ec2-user/terraform"]' \
-      #       --comment "Unzip Terraform files on EC2 instance" \
-      #       --query "Command.CommandId" \
-      #       --output text
-
-      # - name: Adjust permissions on EC2
-      #   run: |
-      #     aws ssm send-command \
-      #       --document-name "AWS-RunShellScript" \
-      #       --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-      #       --parameters 'commands=["sudo chown -R ubuntu:ubuntu /home/ubuntu/terraform"]' \
-      #       --comment "Adjust permissions on EC2 instance" \
-      #       --query "Command.CommandId" \
-      #       --output text
-
-      - name: Upload Terraform files to EC2
+      - name: Upload and Unzip Terraform files to EC2
         id: upload_terraform
         run: |
           command_id=$(aws ssm send-command \
@@ -74,14 +54,6 @@ jobs:
             --query "Command.CommandId" \
             --output text)
           echo "command_id=$command_id" >> $GITHUB_ENV
-
-      - name: Get Upload Logs
-        run: |
-          aws ssm get-command-invocation \
-            --command-id ${{ env.command_id }} \
-            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
-            --query "StandardOutputContent" \
-            --output text
 
       - name: Execute Terraform Init on EC2
         id: terraform_init
@@ -122,31 +94,3 @@ jobs:
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
             --query "StandardOutputContent" \
             --output text
-
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3
-      #   with:
-      #     terraform_version: "1.1.7"
-
-      # - name: Terraform Init
-      #   run: terraform init
-      #   working-directory: ./infra
-
-      # - name: Terraform Plan
-      #   run: terraform plan
-      #   working-directory: ./infra
-
-      # - name: Terraform Apply
-      #   id: apply
-      #   run: terraform apply -auto-approve
-      #   working-directory: ./infra
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_DEFAULT_REGION: sa-east-1
-
-      # - name: Verify Terraform Apply
-      #   run: |
-      #     echo "Verifying Terraform Apply..."
-      #     terraform show
-      #   working-directory: ./infra
