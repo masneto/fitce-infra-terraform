@@ -30,12 +30,20 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Parse Issue Body
-        id: issue_body_parser
+      - name: Run Issue form parser
+        id: parse
         uses: peter-murray/issue-forms-body-parser@v4.0.0
         with:
           issue_id: ${{ github.event.issue.number }}
           separator: '###'
+          label_marker_start: '>>'
+          label_marker_end: '<<'
+
+      - name: Show parsed data JSON
+        env:
+          parsed_data: ${{ steps.parse.outputs.payload }}
+        run: |
+          echo "$parsed_data"
 
       - name: Terraform Plan for Destroy
         env:
