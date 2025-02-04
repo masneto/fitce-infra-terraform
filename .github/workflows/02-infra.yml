@@ -4,11 +4,15 @@ on:
   pull_request:
     branches:
       - main
-    types: [closed, opened, synchronize]
+    types: [closed]
+
+concurrency:
+  group: fitce-infra-terraform
+  cancel-in-progress: true
 
 jobs:
   terraform:
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
