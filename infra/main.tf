@@ -5,6 +5,13 @@ provider "aws" {
 # Criar um Bucket S3 para armazenar os builds
 resource "aws_s3_bucket" "deploy_bucket" {
   bucket = var.bucket_name
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      bucket
+    ]
+  }
 }
 
 # Criar pastas dentro do bucket (prefixos simulam diretórios no S3)
@@ -27,6 +34,13 @@ resource "aws_iam_role" "developer_role" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Criar Role IAM para DevOps
@@ -41,6 +55,13 @@ resource "aws_iam_role" "devops_role" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Criar Role IAM para Automação
@@ -55,6 +76,13 @@ resource "aws_iam_role" "automation_role" {
       Action = "sts:AssumeRole"
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Criar Política de Permissão para Desenvolvedores (Acesso somente à pasta "dev")
@@ -77,12 +105,27 @@ resource "aws_iam_policy" "developer_policy" {
       Resource = "${aws_s3_bucket.deploy_bucket.arn}/dev/*"
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Anexar Política de Desenvolvedor à Role
 resource "aws_iam_role_policy_attachment" "developer_policy_attachment" {
   role       = aws_iam_role.developer_role.name
   policy_arn = aws_iam_policy.developer_policy.arn
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      role,
+      policy_arn
+    ]
+  }
 }
 
 # Criar Política de Permissão para DevOps (Acesso total ao S3)
@@ -98,12 +141,27 @@ resource "aws_iam_policy" "devops_policy" {
       Resource = ["${aws_s3_bucket.deploy_bucket.arn}/*"]
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Anexar Política de DevOps à Role
 resource "aws_iam_role_policy_attachment" "devops_policy_attachment" {
   role       = aws_iam_role.devops_role.name
   policy_arn = aws_iam_policy.devops_policy.arn
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      role,
+      policy_arn
+    ]
+  }
 }
 
 # Criar Política de Permissão para Automação (Acesso à pasta "dev", "hom" e "prod")
@@ -130,10 +188,25 @@ resource "aws_iam_policy" "automation_policy" {
       ]
     }]
   })
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name
+    ]
+  }
 }
 
 # Anexar Política de Automação à Role
 resource "aws_iam_role_policy_attachment" "automation_policy_attachment" {
   role       = aws_iam_role.automation_role.name
   policy_arn = aws_iam_policy.automation_policy.arn
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      role,
+      policy_arn
+    ]
+  }
 }
