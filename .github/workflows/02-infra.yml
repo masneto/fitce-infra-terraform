@@ -22,6 +22,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: sa-east-1
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+
       - name: Zip Terraform files
         run: cd infra && zip -r ../terraform.zip .
 
@@ -94,3 +99,13 @@ jobs:
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
             --query "StandardOutputContent" \
             --output text
+
+      - name: Terraform Apply
+        id: apply
+        env:
+          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+        working-directory: infra
+        run: |
+          terraform init
+          terraform validate
+          terraform plan            
