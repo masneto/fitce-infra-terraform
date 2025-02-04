@@ -43,6 +43,16 @@ jobs:
             --output text)
           echo "command_id=$command_id" >> $GITHUB_ENV
 
+      - name: Unzip Terraform files on EC2
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --comment "Unzip Terraform files on EC2 instance" \
+            --query "Command.CommandId" \
+            --output text          
+
       # - name: Upload Terraform files to EC2
       #   id: upload_terraform
       #   run: |
