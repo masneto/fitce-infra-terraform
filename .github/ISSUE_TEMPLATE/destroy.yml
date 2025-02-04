@@ -18,13 +18,6 @@ body:
       description: Name of the resource to be destroyed.
       placeholder: e.g., my-resource
 
-  - type: textarea
-    id: reason
-    attributes:
-      label: Reason for Destruction
-      description: Provide a reason for why this resource should be destroyed.
-      placeholder: e.g., No longer needed, cost-saving, etc.
-
   - type: dropdown
     id: resource_type
     attributes:
@@ -34,3 +27,10 @@ body:
         - S3 Bucket
         - IAM Role
         - IAM Policy
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason for Destruction
+      description: Provide a reason for why this resource should be destroyed.
+      placeholder: e.g., No longer needed, cost-saving, etc.
