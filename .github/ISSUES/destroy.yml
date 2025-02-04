@@ -1,0 +1,37 @@
+name: Destroy Resources
+description: Use this template to request the destruction of resources.
+title: "[DESTROY] Request to Destroy Resources"
+labels: ["destroy", "cleanup"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Destroy Resources Request
+
+        Please provide the following information to request the destruction of resources.
+
+  - type: input
+    id: resource_name
+    attributes:
+      label: Resource Name
+      description: Name of the resource to be destroyed.
+      placeholder: e.g., my-resource
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason for Destruction
+      description: Provide a reason for why this resource should be destroyed.
+      placeholder: e.g., No longer needed, cost-saving, etc.
+
+  - type: dropdown
+    id: resource_type
+    attributes:
+      label: Resource Type
+      description: Select the type of resource to be destroyed.
+      options:
+        - S3 Bucket
+        - IAM Role
+        - IAM Policy

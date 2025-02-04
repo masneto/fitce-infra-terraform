@@ -6,6 +6,10 @@ on:
       - main
     types: [closed]
 
+concurrency:
+  group: fitce-infra-terraform
+  cancel-in-progress: true
+
 jobs:
   terraform:
     if: github.event.pull_request.merged == true
@@ -15,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup AWS CLI
+      - name: Setup AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -32,39 +36,11 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Import Existing AWS Resources
+      - name: Import and Verify Existing AWS Resources
         working-directory: infra
         run: |
-          # Importa o bucket S3 se existir
-          if aws s3api head-bucket --bucket fitce-bucket-deploy 2>/dev/null; then
-            terraform import aws_s3_bucket.deploy_bucket fitce-bucket-deploy || true
-          fi
-
-          # Importa todas as IAM Roles existentes
-          for role in DeveloperRole DevOpsRole AutomationRole; do
-            ROLE_EXISTS=$(aws iam get-role --role-name $role --query 'Role.RoleName' --output text 2>/dev/null || echo "")
-            if [[ "$ROLE_EXISTS" == "$role" ]]; then
-              terraform import aws_iam_role.${role,,}_role $role || true
-            fi
-          done
-
-          # Importa todas as IAM Policies existentes
-          for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
-            POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$policy'].Arn" --output text 2>/dev/null || echo "")
-            if [[ -n "$POLICY_ARN" ]]; then
-              terraform import aws_iam_policy.${policy,,}_policy $POLICY_ARN || true
-            fi
-          done
-
-          # Importa todas as IAM Role Policy Attachments existentes
-          for role in DeveloperRole DevOpsRole AutomationRole; do
-            for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
-              ATTACHED_ARN=$(aws iam list-attached-role-policies --role-name $role --query "AttachedPolicies[?PolicyName=='$policy'].PolicyArn" --output text 2>/dev/null || echo "")
-              if [[ -n "$ATTACHED_ARN" ]]; then
-                terraform import aws_iam_role_policy_attachment.${role,,}_policy_attachment "$role/$ATTACHED_ARN" || true
-              fi
-            done
-          done
+          chmod +x import_resources.sh
+          ./import_resources.sh
 
       - name: Terraform Apply
         id: apply
@@ -73,5 +49,5 @@ jobs:
         working-directory: infra
         run: |
           terraform validate
-          terraform plan
+          terraform plan       
           terraform apply -auto-approve
