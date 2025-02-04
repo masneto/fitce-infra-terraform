@@ -24,6 +24,9 @@ jobs:
 
       - name: Zip Terraform files
         run: zip -r terraform.zip ./infra
+      
+      - run: |
+          ls -la
 
       - name: Upload Terraform files to EC2
         id: upload_terraform
