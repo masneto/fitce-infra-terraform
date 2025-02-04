@@ -24,18 +24,46 @@ jobs:
 
       - name: Zip Terraform files
         run: zip -r terraform.zip ./infra
-
-      - name: Upload Terraform files to EC2
-        id: upload_terraform
+      
+      - name: Upload Terraform zip to EC2 via SSM
+        id: upload_zip
         run: |
+          aws ssm put-parameter \
+            --name "terraform-zip-content" \
+            --type "String" \
+            --value "$(base64 -w0 terraform.zip)" \
+            --overwrite
+
           command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
-            --comment "Copy Terraform files to EC2 instance" \
+            --parameters 'commands=["aws ssm get-parameter --name terraform-zip-content --query Parameter.Value --output text | base64 -d > /home/ubuntu/terraform.zip"]' \
+            --comment "Transfer zip file to EC2" \
             --query "Command.CommandId" \
             --output text)
           echo "command_id=$command_id" >> $GITHUB_ENV
+
+      - name: Unzip Terraform files on EC2
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --comment "Unzip Terraform files on EC2 instance" \
+            --query "Command.CommandId" \
+            --output text          
+
+      # - name: Upload Terraform files to EC2
+      #   id: upload_terraform
+      #   run: |
+      #     command_id=$(aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+      #       --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+      #       --comment "Copy Terraform files to EC2 instance" \
+      #       --query "Command.CommandId" \
+      #       --output text)
+      #     echo "command_id=$command_id" >> $GITHUB_ENV
 
       - name: Get Upload Logs
         run: |
