@@ -36,6 +36,7 @@ jobs:
         with:
           github_token: ${{ secrets.PAT_GITHUB_TOKEN }}
           issue_id: ${{ github.event.issue.number }}
+          payload: json
 
       - name: Terraform Plan for Destroy
         env:
