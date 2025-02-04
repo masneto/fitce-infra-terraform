@@ -31,28 +31,25 @@ jobs:
         run: terraform init
 
       - name: Parse Issue Body
-        id: parse_issue
-        run: |
-          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Name' | tail -n 1 | xargs)
-          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Type' | tail -n 1 | xargs)
-          echo "RESOURCE_NAME=$RESOURCE_NAME"
-          echo "RESOURCE_TYPE=$RESOURCE_TYPE"
-          echo "RESOURCE_NAME=$RESOURCE_NAME" >> $GITHUB_ENV
-          echo "RESOURCE_TYPE=$RESOURCE_TYPE" >> $GITHUB_ENV
+        id: issue_body_parser
+        uses: peter-murray/issue-body-parser-action@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_id: ${{ github.event.issue.number }}
 
       - name: Terraform Plan for Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+          RESOURCE_NAME: ${{ steps.issue_body_parser.outputs.resource_name }}
+          RESOURCE_TYPE: ${{ steps.issue_body_parser.outputs.resource_type }}
         working-directory: infra
         run: |
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
-              echo "Destroying S3 Bucket: $RESOURCE_NAME"
               ;;
             "IAM Role")
               terraform plan -destroy -target=aws_iam_role.$RESOURCE_NAME
-              echo "Destroying IAM Role: $RESOURCE_NAME"
               ;;
             "IAM Policy")
               terraform plan -destroy -target=aws_iam_policy.$RESOURCE_NAME
@@ -66,6 +63,8 @@ jobs:
       - name: Terraform Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+          RESOURCE_NAME: ${{ steps.issue_body_parser.outputs.resource_name }}
+          RESOURCE_TYPE: ${{ steps.issue_body_parser.outputs.resource_type }}
         working-directory: infra
         run: |
           case $RESOURCE_TYPE in
