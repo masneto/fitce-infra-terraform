@@ -56,8 +56,8 @@ jobs:
       - name: Terraform Plan for Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
-          RESOURCE_NAME: ${{ env.RESOURCE_NAME }}
-          RESOURCE_TYPE: ${{ env.RESOURCE_TYPE }}
+          RESOURCE_NAME: ${{ fromJson(steps.parse.outputs.payload).resource_name }}
+          RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
         working-directory: infra
         run: |
           case $RESOURCE_TYPE in
@@ -79,8 +79,8 @@ jobs:
       - name: Terraform Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
-          RESOURCE_NAME: ${{ env.RESOURCE_NAME }}
-          RESOURCE_TYPE: ${{ env.RESOURCE_TYPE }}
+          RESOURCE_NAME: ${{ fromJson(steps.parse.outputs.payload).resource_name }}
+          RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
         working-directory: infra
         run: |
           case $RESOURCE_TYPE in
