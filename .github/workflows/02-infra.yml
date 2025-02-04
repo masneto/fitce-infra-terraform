@@ -15,30 +15,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          terraform_version: "1.1.7"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
 
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infra
+      - name: Zip Terraform files
+        run: zip -r terraform.zip ./infra
 
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: ./infra
-
-      - name: Terraform Apply
-        id: apply
-        run: terraform apply -auto-approve
-        working-directory: ./infra
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: sa-east-1
-
-      - name: Verify Terraform Apply
+      - name: Send Terraform files to EC2
         run: |
-          echo "Verifying Terraform Apply..."
-          terraform show
-        working-directory: ./infra
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --comment "Copy Terraform files to EC2 instance"
+
+      - name: Execute Terraform Init on EC2
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["cd /home/ubuntu/terraform", "terraform init"]' \
+            --comment "Initialize Terraform on EC2 instance"
+
+      - name: Execute Terraform Plan on EC2
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+            --parameters 'commands=["cd /home/ubuntu/terraform", "terraform plan"]' \
+            --comment "Plan Terraform on EC2 instance"
+
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: "1.1.7"
+
+      # - name: Terraform Init
+      #   run: terraform init
+      #   working-directory: ./infra
+
+      # - name: Terraform Plan
+      #   run: terraform plan
+      #   working-directory: ./infra
+
+      # - name: Terraform Apply
+      #   id: apply
+      #   run: terraform apply -auto-approve
+      #   working-directory: ./infra
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     AWS_DEFAULT_REGION: sa-east-1
+
+      # - name: Verify Terraform Apply
+      #   run: |
+      #     echo "Verifying Terraform Apply..."
+      #     terraform show
+      #   working-directory: ./infra
