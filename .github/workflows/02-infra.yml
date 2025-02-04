@@ -22,9 +22,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: sa-east-1
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+
       - name: Zip Terraform files
         run: cd infra && zip -r ../terraform.zip .
-      
+
       - name: Upload Terraform zip to EC2 via SSM
         id: upload_zip
         run: |
@@ -41,7 +46,7 @@ jobs:
             --comment "Transfer zip file to EC2" \
             --query "Command.CommandId" \
             --output text)
-          echo "command_id=$command_id" >> $GITHUB_ENV
+          echo "command_id_upload_zip=$command_id" >> $GITHUB_ENV
 
       - name: Upload and Unzip Terraform files to EC2
         id: upload_terraform
@@ -49,11 +54,11 @@ jobs:
           command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --parameters 'commands=["mkdir -p /home/ec2-user/terraform", "unzip -o /home/ec2-user/terraform.zip -d /home/ec2-user/terraform"]' \
             --comment "Copy Terraform files to EC2 instance" \
             --query "Command.CommandId" \
             --output text)
-          echo "command_id=$command_id" >> $GITHUB_ENV
+          echo "command_id_unzip=$command_id" >> $GITHUB_ENV
 
       - name: Execute Terraform Init on EC2
         id: terraform_init
@@ -65,12 +70,12 @@ jobs:
             --comment "Initialize Terraform on EC2 instance" \
             --query "Command.CommandId" \
             --output text)
-          echo "command_idInit=$command_id" >> $GITHUB_ENV
+          echo "command_id_init=$command_id" >> $GITHUB_ENV
 
       - name: Get Init Logs
         run: |
           aws ssm get-command-invocation \
-            --command-id ${{ env.command_idInit }} \
+            --command-id ${{ env.command_id_init }} \
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
             --query "StandardOutputContent" \
             --output text
@@ -85,12 +90,22 @@ jobs:
             --comment "Plan Terraform on EC2 instance" \
             --query "Command.CommandId" \
             --output text)
-          echo "command_idPlan=$command_id" >> $GITHUB_ENV
+          echo "command_id_plan=$command_id" >> $GITHUB_ENV
 
       - name: Get Plan Logs
         run: |
           aws ssm get-command-invocation \
-            --command-id ${{ env.command_idPlan }} \
+            --command-id ${{ env.command_id_plan }} \
             --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
             --query "StandardOutputContent" \
             --output text
+
+      - name: Terraform Apply
+        id: apply
+        env:
+          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+        working-directory: infra
+        run: |
+          terraform init
+          terraform validate
+          terraform plan            
