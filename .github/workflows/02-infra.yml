@@ -37,7 +37,7 @@ jobs:
           command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["aws ssm get-parameter --name terraform-zip-content --query Parameter.Value --output text | base64 -d > /home/ubuntu/terraform.zip"]' \
+            --parameters 'commands=["aws ssm get-parameter --name terraform-zip-content --query Parameter.Value --output text | base64 -d > /home/ec2-user/terraform.zip"]' \
             --comment "Transfer zip file to EC2" \
             --query "Command.CommandId" \
             --output text)
@@ -48,20 +48,20 @@ jobs:
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
+            --parameters 'commands=["unzip -o /home/ec2-user/terraform.zip -d /home/ec2-user/terraform"]' \
             --comment "Unzip Terraform files on EC2 instance" \
             --query "Command.CommandId" \
             --output text
 
-      - name: Adjust permissions on EC2
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["sudo chown -R ubuntu:ubuntu /home/ubuntu/terraform"]' \
-            --comment "Adjust permissions on EC2 instance" \
-            --query "Command.CommandId" \
-            --output text
+      # - name: Adjust permissions on EC2
+      #   run: |
+      #     aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
+      #       --parameters 'commands=["sudo chown -R ubuntu:ubuntu /home/ubuntu/terraform"]' \
+      #       --comment "Adjust permissions on EC2 instance" \
+      #       --query "Command.CommandId" \
+      #       --output text
 
       # - name: Upload Terraform files to EC2
       #   id: upload_terraform
@@ -89,7 +89,7 @@ jobs:
           command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["cd /home/ubuntu/terraform", "terraform init"]' \
+            --parameters 'commands=["cd /home/ec2-user/terraform", "terraform init"]' \
             --comment "Initialize Terraform on EC2 instance" \
             --query "Command.CommandId" \
             --output text)
@@ -109,7 +109,7 @@ jobs:
           command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["cd /home/ubuntu/terraform", "terraform plan"]' \
+            --parameters 'commands=["cd /home/ec2-user/terraform", "terraform plan"]' \
             --comment "Plan Terraform on EC2 instance" \
             --query "Command.CommandId" \
             --output text)
