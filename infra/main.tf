@@ -5,6 +5,10 @@ provider "aws" {
 # Criar um Bucket S3 para armazenar os builds
 resource "aws_s3_bucket" "deploy_bucket" {
   bucket = var.bucket_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Criar pastas dentro do bucket (prefixos simulam diretórios no S3)
