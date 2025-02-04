@@ -35,8 +35,8 @@ jobs:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
-          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
+          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_type')
+          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_name')
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
@@ -58,8 +58,8 @@ jobs:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
-          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
+          RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_type')
+          RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | jq -r '.resource_name')
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform destroy -target=aws_s3_bucket.$RESOURCE_NAME -auto-approve

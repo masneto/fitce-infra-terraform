@@ -1,8 +1,7 @@
 name: Destroy Resources
 description: Use this template to request the destruction of resources.
 title: "[DESTROY] Request to Destroy Resources"
-labels: ["destroy", "cleanup"]
-assignees: []
+labels: ["destroy"]
 
 body:
   - type: markdown
