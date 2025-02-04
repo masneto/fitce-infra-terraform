@@ -33,4 +33,4 @@ body:
     attributes:
       label: ">>reason<<"
       description: Provide a reason for why this resource should be destroyed.
-      placeholder: e.g., No longer needed, cost-saving, etc.
+      placeholder: ex No longer needed, cost-saving, etc.
