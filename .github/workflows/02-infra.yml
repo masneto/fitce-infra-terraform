@@ -25,29 +25,45 @@ jobs:
       - name: Zip Terraform files
         run: zip -r terraform.zip ./infra
 
-      - name: Send Terraform files to EC2
-        run: |
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
-            --parameters 'commands=["mkdir -p /home/ubuntu/terraform", "unzip -o /home/ubuntu/terraform.zip -d /home/ubuntu/terraform"]' \
-            --comment "Copy Terraform files to EC2 instance"
-
       - name: Execute Terraform Init on EC2
+        id: terraform_init
         run: |
-          aws ssm send-command \
+          command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
             --parameters 'commands=["cd /home/ubuntu/terraform", "terraform init"]' \
-            --comment "Initialize Terraform on EC2 instance"
+            --comment "Initialize Terraform on EC2 instance" \
+            --query "Command.CommandId" \
+            --output text)
+          echo "command_id=$command_id" >> $GITHUB_ENV
+
+      - name: Get Init Logs
+        run: |
+          aws ssm get-command-invocation \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "StandardOutputContent" \
+            --output text
 
       - name: Execute Terraform Plan on EC2
+        id: terraform_plan
         run: |
-          aws ssm send-command \
+          command_id=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ secrets.EC2_INSTANCE_ID }}" \
             --parameters 'commands=["cd /home/ubuntu/terraform", "terraform plan"]' \
-            --comment "Plan Terraform on EC2 instance"
+            --comment "Plan Terraform on EC2 instance" \
+            --query "Command.CommandId" \
+            --output text)
+          echo "command_id=$command_id" >> $GITHUB_ENV
+
+      - name: Get Plan Logs
+        run: |
+          aws ssm get-command-invocation \
+            --command-id ${{ env.command_id }} \
+            --instance-id ${{ secrets.EC2_INSTANCE_ID }} \
+            --query "StandardOutputContent" \
+            --output text
 
       # - name: Setup Terraform
       #   uses: hashicorp/setup-terraform@v3
