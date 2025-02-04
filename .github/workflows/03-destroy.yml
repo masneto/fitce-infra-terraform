@@ -35,6 +35,8 @@ jobs:
         run: |
           RESOURCE_NAME=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Name' | tail -n 1 | xargs)
           RESOURCE_TYPE=$(echo "${{ github.event.issue.body }}" | grep -A 1 '### Resource Type' | tail -n 1 | xargs)
+          echo "RESOURCE_NAME=$RESOURCE_NAME"
+          echo "RESOURCE_TYPE=$RESOURCE_TYPE"
           echo "RESOURCE_NAME=$RESOURCE_NAME" >> $GITHUB_ENV
           echo "RESOURCE_TYPE=$RESOURCE_TYPE" >> $GITHUB_ENV
 
@@ -46,9 +48,11 @@ jobs:
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
+              echo "Destroying S3 Bucket: $RESOURCE_NAME"
               ;;
             "IAM Role")
               terraform plan -destroy -target=aws_iam_role.$RESOURCE_NAME
+              echo "Destroying IAM Role: $RESOURCE_NAME"
               ;;
             "IAM Policy")
               terraform plan -destroy -target=aws_iam_policy.$RESOURCE_NAME
