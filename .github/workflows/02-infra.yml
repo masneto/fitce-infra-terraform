@@ -1,12 +1,13 @@
 name: 02 - Fitce Infra Terraform
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
 jobs:
   terraform:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +21,9 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
 
       - name: Terraform Apply
         id: apply
