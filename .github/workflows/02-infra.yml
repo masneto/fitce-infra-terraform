@@ -32,37 +32,16 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Check Existing Resources
+      - name: Import and Verify Existing AWS Resources
         working-directory: infra
-        run: |
-          echo "🔍 Verificando estado atual dos recursos..."
-          
-          # Atualiza o estado e verifica diferenças
-          terraform plan -refresh-only -detailed-exitcode
-          PLAN_EXIT_CODE=$?
-          
-          # Interpreta o código de saída
-          # 0 = Sem mudanças
-          # 1 = Erro
-          # 2 = Mudanças encontradas
-          if [ $PLAN_EXIT_CODE -eq 1 ]; then
-            echo "❌ Erro ao verificar recursos"
-            exit 1
-          elif [ $PLAN_EXIT_CODE -eq 2 ]; then
-            echo "⚠️ Recursos existentes detectados que diferem do estado"
-            echo "Execute 'terraform import' para os recursos existentes"
-            terraform show
-            exit 1
-          else
-            echo "✅ Estado atual corresponde com a configuração"
-          fi
-
-      - name: Terraform Plan
-        if: success()
-        working-directory: infra
-        run: terraform plan -out=tfplan
+        run: ./import_resources.sh
 
       - name: Terraform Apply
-        if: success()
+        id: apply
+        env:
+          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
-        run: terraform apply tfplan
+        run: |
+          terraform validate
+          terraform plan       
+          terraform apply -auto-approve
