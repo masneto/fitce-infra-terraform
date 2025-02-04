@@ -52,7 +52,7 @@ jobs:
             ROLE_EXISTS=$(aws iam get-role --role-name $role --query 'Role.RoleName' --output text 2>/dev/null || echo "")
             if [[ "$ROLE_EXISTS" == "$role" ]]; then
               echo "✅ Role '$role' encontrada"
-              terraform import aws_iam_role.${role,,} $role || true
+              terraform import aws_iam_role.${role,,}_role $role || true
             else
               echo "ℹ️ Role '$role' não encontrada"
             fi
