@@ -28,13 +28,49 @@ jobs:
           terraform_wrapper: false
           terraform_version: "1.10.5"
 
+      - name: Initialize Terraform
+        working-directory: infra
+        run: terraform init
+
+      - name: Import Existing AWS Resources
+        working-directory: infra
+        run: |
+          # Importa o bucket S3 se existir
+          if aws s3api head-bucket --bucket fitce-bucket-deploy 2>/dev/null; then
+            terraform import aws_s3_bucket.deploy_bucket fitce-bucket-deploy || true
+          fi
+
+          # Importa todas as IAM Roles existentes
+          for role in DeveloperRole DevOpsRole AutomationRole; do
+            if aws iam get-role --role-name $role 2>/dev/null; then
+              terraform import aws_iam_role.${role,,}_role $role || true
+            fi
+          done
+
+          # Importa todas as IAM Policies existentes
+          for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
+            POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$policy'].Arn" --output text)
+            if [[ -n "$POLICY_ARN" ]]; then
+              terraform import aws_iam_policy.${policy,,}_policy $POLICY_ARN || true
+            fi
+          done
+
+          # Importa todas as IAM Role Policy Attachments existentes
+          for role in DeveloperRole DevOpsRole AutomationRole; do
+            for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
+              ATTACHED_ARN=$(aws iam list-attached-role-policies --role-name $role --query "AttachedPolicies[?PolicyName=='$policy'].PolicyArn" --output text)
+              if [[ -n "$ATTACHED_ARN" ]]; then
+                terraform import aws_iam_role_policy_attachment.${role,,}_policy_attachment "$role/$ATTACHED_ARN" || true
+              fi
+            done
+          done
+
       - name: Terraform Apply
         id: apply
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         working-directory: infra
         run: |
-          terraform init
           terraform validate
-          terraform plan       
-          terraform apply -auto-approve     
+          terraform plan
+          terraform apply -auto-approve
