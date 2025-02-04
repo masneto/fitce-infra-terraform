@@ -34,7 +34,9 @@ jobs:
 
       - name: Import and Verify Existing AWS Resources
         working-directory: infra
-        run: ./import_resources.sh
+        run: |
+          chmod +x import_resources.sh
+          ./import_resources.sh
 
       - name: Terraform Apply
         id: apply
