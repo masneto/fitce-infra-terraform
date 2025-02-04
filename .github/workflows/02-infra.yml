@@ -32,67 +32,37 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      # - name: Import and Verify Existing AWS Resources
-      #   working-directory: infra
-      #   env:
-      #     TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"        
-      #   run: |
-      #     echo "🔍 Verificando recursos existentes..."
-
-      #     # Verifica e importa bucket S3
-      #     if aws s3api head-bucket --bucket fitce-bucket-deploy 2>/dev/null; then
-      #       echo "✅ Bucket S3 'fitce-bucket-deploy' encontrado"
-      #       terraform import aws_s3_bucket.deploy_bucket fitce-bucket-deploy || true
-      #     else
-      #       echo "ℹ️ Bucket S3 'fitce-bucket-deploy' não encontrado"
-      #     fi
-
-      #     # Verifica e importa IAM Roles
-      #     for role in DeveloperRole DevOpsRole AutomationRole; do
-      #       ROLE_EXISTS=$(aws iam get-role --role-name $role --query 'Role.RoleName' --output text 2>/dev/null || echo "")
-      #       if [[ "$ROLE_EXISTS" == "$role" ]]; then
-      #         echo "✅ Role '$role' encontrada"
-      #         terraform import aws_iam_role.${role,,}_role $role || true
-      #       else
-      #         echo "ℹ️ Role '$role' não encontrada"
-      #       fi
-      #     done
-
-      #     # Verifica e importa IAM Policies
-      #     for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
-      #       POLICY_ARN=$(aws iam list-policies --scope Local --query "Policies[?PolicyName=='$policy'].Arn" --output text 2>/dev/null || echo "")
-      #       if [[ -n "$POLICY_ARN" ]]; then
-      #         echo "✅ Policy '$policy' encontrada"
-      #         terraform import aws_iam_policy.${policy,,}_policy $POLICY_ARN || true
-      #       else
-      #         echo "ℹ️ Policy '$policy' não encontrada"
-      #       fi
-      #     done
-
-      #     # Verifica e importa Role Policy Attachments
-      #     for role in DeveloperRole DevOpsRole AutomationRole; do
-      #       for policy in DeveloperS3Access DevOpsS3Access AutomationS3Access; do
-      #         ATTACHED_ARN=$(aws iam list-attached-role-policies --role-name $role --query "AttachedPolicies[?PolicyName=='$policy'].PolicyArn" --output text 2>/dev/null || echo "")
-      #         if [[ -n "$ATTACHED_ARN" ]]; then
-      #           echo "✅ Policy '$policy' anexada à role '$role'"
-      #           terraform import aws_iam_role_policy_attachment.${role,,}_policy_attachment "$role/$ATTACHED_ARN" || true
-      #         else
-      #           echo "ℹ️ Policy '$policy' não está anexada à role '$role'"
-      #         fi
-      #       done
-      #     done
-
-      #     echo "🔍 Verificação de recursos concluída"
-
-      - name: Terraform Validate
+      - name: Check Existing Resources
         working-directory: infra
-        run: terraform validate
-
-      - name: Terraform Plan and Apply
-        working-directory: infra
-        env:
-          TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
         run: |
-          terraform plan
-          terraform destroy -auto-approve
-#          terraform apply -auto-approve tfplan
+          echo "🔍 Verificando estado atual dos recursos..."
+          
+          # Atualiza o estado e verifica diferenças
+          terraform plan -refresh-only -detailed-exitcode
+          PLAN_EXIT_CODE=$?
+          
+          # Interpreta o código de saída
+          # 0 = Sem mudanças
+          # 1 = Erro
+          # 2 = Mudanças encontradas
+          if [ $PLAN_EXIT_CODE -eq 1 ]; then
+            echo "❌ Erro ao verificar recursos"
+            exit 1
+          elif [ $PLAN_EXIT_CODE -eq 2 ]; then
+            echo "⚠️ Recursos existentes detectados que diferem do estado"
+            echo "Execute 'terraform import' para os recursos existentes"
+            terraform show
+            exit 1
+          else
+            echo "✅ Estado atual corresponde com a configuração"
+          fi
+
+      - name: Terraform Plan
+        if: success()
+        working-directory: infra
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: success()
+        working-directory: infra
+        run: terraform apply tfplan
