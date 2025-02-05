@@ -6,7 +6,7 @@ on:
 
 jobs:
   destroy:
-    if: github.event.issue.labels.*.name contains 'destroy'
+    if: contains(github.event.issue.labels.*.name, 'destroy')
     runs-on: ubuntu-latest
 
     steps:
@@ -30,13 +30,36 @@ jobs:
         working-directory: infra
         run: terraform init
 
+      - name: Run Issue form parser
+        id: parse
+        uses: peter-murray/issue-forms-body-parser@v4.0.0
+        with:
+          issue_id: ${{ github.event.issue.number }}
+          separator: '###'
+          label_marker_start: '>>'
+          label_marker_end: '<<'
+
+      - name: Show parsed data JSON
+        env:
+          parsed_data: ${{ steps.parse.outputs.payload }}
+        run: |
+          echo "$parsed_data"
+
+      - name: Set resource variables from parsed data
+        env:
+          RESOURCE_NAME: ${{ fromJson(steps.parse.outputs.payload).resource_name }}
+          RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
+        run: |
+          echo "Resource Name: $RESOURCE_NAME"
+          echo "Resource Type: $RESOURCE_TYPE "
+
       - name: Terraform Plan for Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+          RESOURCE_NAME: ${{ fromJson(steps.parse.outputs.payload).resource_name }}
+          RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
-          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform plan -destroy -target=aws_s3_bucket.$RESOURCE_NAME
@@ -56,10 +79,10 @@ jobs:
       - name: Terraform Destroy
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
+          RESOURCE_NAME: ${{ fromJson(steps.parse.outputs.payload).resource_name }}
+          RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
         working-directory: infra
         run: |
-          RESOURCE_TYPE=$(jq -r '.issue.body | fromjson | .resource_type' <<< "${{ github.event }}")
-          RESOURCE_NAME=$(jq -r '.issue.body | fromjson | .resource_name' <<< "${{ github.event }}")
           case $RESOURCE_TYPE in
             "S3 Bucket")
               terraform destroy -target=aws_s3_bucket.$RESOURCE_NAME -auto-approve
