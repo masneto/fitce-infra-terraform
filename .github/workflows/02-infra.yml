@@ -34,6 +34,8 @@ jobs:
 
       - name: Initialize Terraform
         working-directory: infra
+        env:
+          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
         run: terraform init
 
       - name: Import and Verify Existing AWS Resources
