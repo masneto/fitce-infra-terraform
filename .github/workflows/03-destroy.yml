@@ -51,7 +51,7 @@ jobs:
           RESOURCE_TYPE: ${{ fromJson(steps.parse.outputs.payload).resource_type }}
         run: |
           echo "Resource Name: $RESOURCE_NAME"
-          echo "Resource Type: $RESOURCE_TYPE"
+          echo "Resource Type: $RESOURCE_TYPE "
 
       - name: Terraform Plan for Destroy
         env:
