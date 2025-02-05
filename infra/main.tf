@@ -29,7 +29,7 @@ resource "aws_iam_role" "developer_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
@@ -56,7 +56,7 @@ resource "aws_iam_role" "devops_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
@@ -87,7 +87,7 @@ resource "aws_iam_role" "automation_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
