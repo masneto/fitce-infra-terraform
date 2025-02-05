@@ -46,7 +46,7 @@ jobs:
         id: apply
         env:
           TF_VAR_ec2_name: "${{ secrets.EC2_INSTANCE_ID }}"
-          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}          
+          TF_VAR_aws_account_id: "${{ secrets.AWS_ACCOUNT_ID }}"
         working-directory: infra
         run: |
           terraform validate
