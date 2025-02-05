@@ -29,7 +29,7 @@ resource "aws_iam_role" "developer_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::${var.aws_account_id}:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
@@ -56,7 +56,7 @@ resource "aws_iam_role" "devops_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::${var.aws_account_id}:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
@@ -87,7 +87,7 @@ resource "aws_iam_role" "automation_role" {
       },
       {
         Effect = "Allow"
-        Principal = { Federated = "arn:aws:iam::${var.aws_account_id}:oidc-provider/token.actions.githubusercontent.com" }
+        Principal = { Federated = "arn:aws:iam::481665110400:oidc-provider/token.actions.githubusercontent.com" }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
@@ -183,9 +183,4 @@ resource "aws_iam_policy" "automation_policy" {
 resource "aws_iam_role_policy_attachment" "automation_policy_attachment" {
   role       = aws_iam_role.automation_role.name
   policy_arn = aws_iam_policy.automation_policy.arn
-}
-
-variable "aws_account_id" {
-  description = "The AWS Account ID"
-  type        = string
 }
